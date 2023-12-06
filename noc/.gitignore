@@ -6,6 +6,7 @@ transcript
 work/
 simulation/
 db/
+qdb/
 incremental_db/
 output_files/
 
