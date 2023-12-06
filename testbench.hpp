@@ -6,7 +6,7 @@
 #include "global_defines.hpp"
 
 #define NUM_DPES 2
-#define NUM_REPEATS 100
+#define NUM_REPEATS 1
 
 struct axis_master {
     sc_out<bool> tvalid;

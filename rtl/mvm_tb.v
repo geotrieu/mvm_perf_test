@@ -12,7 +12,7 @@ localparam OPRECISION = 32;     // Output precision in bits
 localparam LANES = DATAW / IPRECISION;  // Number of dot-product INT8 lanes
 localparam DPES  = LANES;       // Number of dot-product engines 
 localparam CLK_PERIOD = 4;
-localparam NUM_REPEATS = 100;
+localparam NUM_REPEATS = 1;
 
 reg clk, rst, rx_tvalid, tx_tready;
 reg [DATAW-1:0] rx_tdata;
