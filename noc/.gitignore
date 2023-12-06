@@ -1,0 +1,21 @@
+# Modelsim related
+libraries/
+modelsim.ini
+vsim.*
+transcript
+work/
+simulation/
+db/
+incremental_db/
+output_files/
+
+# Quartus backups
+*.bak
+
+*.rpt
+*.qpf
+*.qsf
+*.qws
+
+_info
+config.vh
