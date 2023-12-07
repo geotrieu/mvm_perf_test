@@ -11,6 +11,7 @@ module dispatcher # (
    input rst,
    
 	input data_fifo_wen,
+	input data_last,
 	
 	output  logic axis_tx_tvalid,
 	output  logic [DATAUSERW-1:0] axis_tx_tdata,
@@ -68,9 +69,16 @@ module dispatcher # (
 			data_fifo_rdy = ~data_fifo_almost_full_signal;
 		end
 	end
+
+	always_ff @(posedge clk) begin
+		if (rst) begin
+			axis_tx_tlast <= 1'b0;
+		end else begin
+			axis_tx_tlast <= data_last;
+		end
+	end
 	
 	assign axis_tx_tdata = {tuser, tdata};
-	assign axis_tx_tlast = data_fifo_empty_signal;
 
 	// Hook up rest of Tx signals to dummy values to avoid optimizing them out
 	assign axis_tx_tstrb = tdata[BYTEW-1:0];

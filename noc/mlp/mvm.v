@@ -2,6 +2,8 @@
 // Used to capture CPU runtime on ModelSim NoC simulation
 // tuser is not supported in the RTL NoC simulation
 // Instead, the tuser field is appended as the upper bits of the expanded tdata field
+// tlast is used in this version
+// different DPE sizes are also supported
 
 // Instruction Macros for cleaner code. Only supported in Quartus Prime Pro Edition
 //`define inst_reduce(inst)   		``inst``[0]
@@ -415,14 +417,14 @@ fifo # (
 
 assign axis_rx_tready = rxtready;
 assign axis_tx_tvalid = !output_fifo_empty && axis_tx_tready;
-assign axis_tx_tdata = {64'h0, tx_tuser_op, 9'h0, output_fifo_odata}; // Send tuser field as either input or reduction vector
+assign axis_tx_tdata = {64'h0, tx_tuser_op, 9'h0, {(DATAW/IPRECISION-DPES)*IPRECISION{1'b0}}, output_fifo_odata[IPRECISION*DPES-1:0]}; // Send tuser field as either input or reduction vector
 assign axis_tx_tdest = output_fifo_odest;
+assign axis_tx_tlast = ~output_fifo_empty;
 assign axis_tx_tid = 0;
 
 // Hook up rest of Tx signals to dummy values to avoid optimizing them out
 assign axis_tx_tstrb = output_fifo_odata[BYTEW-1:0];
 assign axis_tx_tkeep = output_fifo_odata[2*BYTEW-1:BYTEW];
-assign axis_tx_tlast = output_fifo_odata[31];
 assign axis_tx_tuser = output_fifo_odata[USERW-1:0];
 
 endmodule
