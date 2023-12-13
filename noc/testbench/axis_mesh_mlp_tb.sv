@@ -29,23 +29,23 @@ module axis_mesh_mlp_tb();
 	 localparam DPES = 64;
 	 localparam IPRECISION = 8;
 
-	 /*
-	 localparam string INST_MIFS = $sformatf("%s%s", PROJECT_DIR, "test_compiler/inst_mifs/");
-	 localparam string WEIGHT_MIFS = $sformatf("%s%s", PROJECT_DIR, "test_compiler/weight_mifs/");
+	 
+	 /*localparam string INST_MIFS = $sformatf("%s%s", PROJECT_DIR, "test_compiler/inst_mifs/");
+	 localparam string WEIGHT_MIFS = $sformatf("%s%s", PROJECT_DIR, "test_compiler/weight_mifs/preload/");
 	 localparam string INPUT_MIFS = $sformatf("%s%s", PROJECT_DIR, "test_compiler/input_mifs/");
 	 localparam NUM_LAYERS = 2;
-	 localparam integer NUM_MVMS[NUM_LAYERS] = {2,1};
+	 localparam integer NUM_MVMS[NUM_LAYERS] = {2, 1};
 	 localparam NUM_MVMS_FIRST_LAYER = NUM_MVMS[0];
 	 localparam MAX_MVMS = 2;
 	 localparam integer DISPATCHER_NODE_IDS[NUM_MVMS[0]] = {0,1};
-	 localparam integer MVM_NODE_IDS[NUM_LAYERS][MAX_MVMS] = {{3,4},{5}};
+	 localparam integer MVM_NODE_IDS[NUM_LAYERS][MAX_MVMS] = {{3,4},{5,99}};
 	 localparam WEIGHT_LOADER_NODE_ID = 13;
 	 localparam INST_LOADER_NODE_ID = 14;
-	 localparam COLLECTOR_NODE_ID = 15;
-	 */
+	 localparam COLLECTOR_NODE_ID = 15;*/
 	 
+	
 	 localparam string INST_MIFS = $sformatf("%s%s", PROJECT_DIR, "compiler/inst_mifs/");
-	 localparam string WEIGHT_MIFS = $sformatf("%s%s", PROJECT_DIR, "compiler/weight_mifs/");
+	 localparam string WEIGHT_MIFS = $sformatf("%s%s", PROJECT_DIR, "compiler/weight_mifs/preload/");
 	 localparam string INPUT_MIFS = $sformatf("%s%s", PROJECT_DIR, "compiler/input_mifs/");
 	 localparam NUM_LAYERS = 4;
 	 localparam integer NUM_MVMS[NUM_LAYERS] = {3,3,2,2};
@@ -129,14 +129,15 @@ module axis_mesh_mlp_tb();
 		end
 		$display("Done loading Instructions");
 
-		for (int layer = 0; layer < NUM_LAYERS; layer++) begin
+		/*for (int layer = 0; layer < NUM_LAYERS; layer++) begin
 			for (int mvm = 0; mvm < NUM_MVMS[layer]; mvm++) begin
 				for (int dpe = 0; dpe < DPES; dpe++) begin
+					$display("Loading: layer%0d_mvm%0d_dot%0d.mif", layer, mvm, dpe);
 					parse_send_weights($sformatf("%slayer%0d_mvm%0d_dot%0d.mif", WEIGHT_MIFS, layer, mvm, dpe), dpe, MVM_NODE_IDS[layer][mvm]);
 				end
 			end
 		end
-		$display("Done loading Weights");
+		$display("Done loading Weights");*/
 
 		still_have_inputs_to_feed = 1'b1;
 		while (still_have_inputs_to_feed) begin
@@ -165,7 +166,10 @@ module axis_mesh_mlp_tb();
 		forever begin
 			@(negedge clk);
 			if (collector_fifo_ren && collector_fifo_rdy) begin
-				$display("Received: %d", collector_fifo_rdata);
+				$display("Received:");
+				for (int dpe = 0; dpe < DPES; dpe++) begin
+					$display("%0d", collector_fifo_rdata[dpe*IPRECISION +: IPRECISION]);
+				end
 				case (++count)
 					1: if (collector_fifo_rdata !== 64'h3) passing = 0;
 					2: if (collector_fifo_rdata !== 64'h6) passing = 0;
@@ -183,34 +187,44 @@ module axis_mesh_mlp_tb();
 		@(negedge clk);
 	end
 
-	genvar layer_id, mvm_id;
-	generate 
+	generate begin: mvm_gen
+		genvar layer_id, mvm_id;
 		for (layer_id = 0; layer_id < NUM_LAYERS; layer_id++) begin: generate_layers
 			for (mvm_id = 0; mvm_id < NUM_MVMS[layer_id]; mvm_id++) begin: generate_mvms
+				localparam row = node_r(MVM_NODE_IDS[layer_id][mvm_id]);
+				localparam col = node_c(MVM_NODE_IDS[layer_id][mvm_id]);
+				localparam string weight_hex_prefix = $sformatf("%slayer%0d_mvm%0d", WEIGHT_MIFS, layer_id, mvm_id);
+			
 				mvm #(
 					.DATAW(ACTUAL_DATAW),         // Bitwidth of axi-s tdata (without tuser appended)
 					.IDW(TID_WIDTH),            // Bitwidth of axi-s tid
 					.DESTW(TDEST_WIDTH),		   // Bitwidth of axi-s tdest
-					.DPES(DPES) //TODO: REMOVE
+					.MEM_INIT_FILE_PREFIX(weight_hex_prefix),
+					.DPES(DPES),
+					.MVM_NODE_ID(MVM_NODE_IDS[layer_id][mvm_id])
 				) mvm_inst (
 					.clk,
 					.rst(~rst_n),
-					.axis_rx_tvalid(axis_out_tvalid[node_r(MVM_NODE_IDS[layer_id][mvm_id])][node_c(MVM_NODE_IDS[layer_id][mvm_id])]),
-					.axis_rx_tdata(axis_out_tdata[node_r(MVM_NODE_IDS[layer_id][mvm_id])][node_c(MVM_NODE_IDS[layer_id][mvm_id])]),
-					.axis_rx_tid(axis_out_tid[node_r(MVM_NODE_IDS[layer_id][mvm_id])][node_c(MVM_NODE_IDS[layer_id][mvm_id])]),
-					.axis_rx_tdest(axis_out_tdest[node_r(MVM_NODE_IDS[layer_id][mvm_id])][node_c(MVM_NODE_IDS[layer_id][mvm_id])]),
-					.axis_rx_tready(axis_out_tready[node_r(MVM_NODE_IDS[layer_id][mvm_id])][node_c(MVM_NODE_IDS[layer_id][mvm_id])]),
-					.axis_tx_tvalid(axis_in_tvalid[node_r(MVM_NODE_IDS[layer_id][mvm_id])][node_c(MVM_NODE_IDS[layer_id][mvm_id])]),
-					.axis_tx_tdata(axis_in_tdata[node_r(MVM_NODE_IDS[layer_id][mvm_id])][node_c(MVM_NODE_IDS[layer_id][mvm_id])]),
-					.axis_tx_tid(axis_in_tid[node_r(MVM_NODE_IDS[layer_id][mvm_id])][node_c(MVM_NODE_IDS[layer_id][mvm_id])]),
-					.axis_tx_tdest(axis_in_tdest[node_r(MVM_NODE_IDS[layer_id][mvm_id])][node_c(MVM_NODE_IDS[layer_id][mvm_id])]),
-					.axis_tx_tready(axis_in_tready[node_r(MVM_NODE_IDS[layer_id][mvm_id])][node_c(MVM_NODE_IDS[layer_id][mvm_id])]),
-					.axis_tx_tlast(axis_in_tlast[node_r(MVM_NODE_IDS[layer_id][mvm_id])][node_c(MVM_NODE_IDS[layer_id][mvm_id])])
+					.axis_rx_tvalid(axis_out_tvalid[row][col]),
+					.axis_rx_tdata(axis_out_tdata[row][col]),
+					.axis_rx_tid(axis_out_tid[row][col]),
+					.axis_rx_tdest(axis_out_tdest[row][col]),
+					.axis_rx_tready(axis_out_tready[row][col]),
+					.axis_tx_tvalid(axis_in_tvalid[row][col]),
+					.axis_tx_tdata(axis_in_tdata[row][col]),
+					.axis_tx_tid(axis_in_tid[row][col]),
+					.axis_tx_tdest(axis_in_tdest[row][col]),
+					.axis_tx_tready(axis_in_tready[row][col]),
+					.axis_tx_tlast(axis_in_tlast[row][col])
 				);
 			end
 		end
+	end
 	endgenerate
-	 
+	
+	localparam collector_row = node_r(COLLECTOR_NODE_ID);
+	localparam collector_col = node_c(COLLECTOR_NODE_ID);
+
 	collector #(
 		  .DATAW(ACTUAL_DATAW),         // Bitwidth of axi-s tdata
 		  .IDW(TID_WIDTH),            // Bitwidth of axi-s tid
@@ -219,11 +233,11 @@ module axis_mesh_mlp_tb();
         .clk,
         .rst(~rst_n),
 	     .data_fifo_ren(collector_fifo_ren),
-		  .axis_rx_tvalid(axis_out_tvalid[node_r(COLLECTOR_NODE_ID)][node_c(COLLECTOR_NODE_ID)]),
-	     .axis_rx_tdata(axis_out_tdata[node_r(COLLECTOR_NODE_ID)][node_c(COLLECTOR_NODE_ID)][ACTUAL_DATAW-1:0]),
-	     .axis_rx_tid(axis_out_tid[node_r(COLLECTOR_NODE_ID)][node_c(COLLECTOR_NODE_ID)]),
-	     .axis_rx_tdest(axis_out_tdest[node_r(COLLECTOR_NODE_ID)][node_c(COLLECTOR_NODE_ID)]),
-	     .axis_rx_tready(axis_out_tready[node_r(COLLECTOR_NODE_ID)][node_c(COLLECTOR_NODE_ID)]),
+		  .axis_rx_tvalid(axis_out_tvalid[collector_row][collector_col]),
+	     .axis_rx_tdata(axis_out_tdata[collector_row][collector_col][ACTUAL_DATAW-1:0]),
+	     .axis_rx_tid(axis_out_tid[collector_row][collector_col]),
+	     .axis_rx_tdest(axis_out_tdest[collector_row][collector_col]),
+	     .axis_rx_tready(axis_out_tready[collector_row][collector_col]),
 	     .data_fifo_rdata(collector_fifo_rdata),
         .data_fifo_rdy(collector_fifo_rdy)
     );
@@ -231,6 +245,9 @@ module axis_mesh_mlp_tb();
 	genvar dispatcher_id;
 	generate 
 		for (dispatcher_id = 0; dispatcher_id < NUM_MVMS_FIRST_LAYER; dispatcher_id++) begin: generate_dispatchers
+			localparam row = node_r(DISPATCHER_NODE_IDS[dispatcher_id]);
+			localparam col = node_c(DISPATCHER_NODE_IDS[dispatcher_id]);
+
 			dispatcher #(
 				.DATAW(ACTUAL_DATAW),         // Bitwidth of axi-s tdata
 				.IDW(TID_WIDTH),            // Bitwidth of axi-s tid
@@ -241,12 +258,12 @@ module axis_mesh_mlp_tb();
 				.rst(~rst_n),
 				.data_fifo_wen(dispatcher_fifo_wen[dispatcher_id]),
 				.data_last(dispatcher_last[dispatcher_id]),
-				.axis_tx_tvalid(axis_in_tvalid[node_r(DISPATCHER_NODE_IDS[dispatcher_id])][node_c(DISPATCHER_NODE_IDS[dispatcher_id])]),
-				.axis_tx_tdata(axis_in_tdata[node_r(DISPATCHER_NODE_IDS[dispatcher_id])][node_c(DISPATCHER_NODE_IDS[dispatcher_id])]),
-				.axis_tx_tid(axis_in_tid[node_r(DISPATCHER_NODE_IDS[dispatcher_id])][node_c(DISPATCHER_NODE_IDS[dispatcher_id])]),
-				.axis_tx_tdest(axis_in_tdest[node_r(DISPATCHER_NODE_IDS[dispatcher_id])][node_c(DISPATCHER_NODE_IDS[dispatcher_id])]),
-				.axis_tx_tready(axis_in_tready[node_r(DISPATCHER_NODE_IDS[dispatcher_id])][node_c(DISPATCHER_NODE_IDS[dispatcher_id])]),
-				.axis_tx_tlast(axis_in_tlast[node_r(DISPATCHER_NODE_IDS[dispatcher_id])][node_c(DISPATCHER_NODE_IDS[dispatcher_id])]),
+				.axis_tx_tvalid(axis_in_tvalid[row][col]),
+				.axis_tx_tdata(axis_in_tdata[row][col]),
+				.axis_tx_tid(axis_in_tid[row][col]),
+				.axis_tx_tdest(axis_in_tdest[row][col]),
+				.axis_tx_tready(axis_in_tready[row][col]),
+				.axis_tx_tlast(axis_in_tlast[row][col]),
 				.data_fifo_wdata(dispatcher_fifo_wdata[dispatcher_id]),
 				.data_fifo_rdy(dispatcher_fifo_rdy[dispatcher_id])
 			);
@@ -331,7 +348,7 @@ module axis_mesh_mlp_tb();
 			data_file = $fopen(file, "r");
 			while(!$feof(data_file)) begin
 				scan_file = $fscanf(data_file, "%b %d %d %d %b %b %b %b \n", instruction[31], instruction[30:22], instruction[21:13], instruction[12:4], instruction[3], instruction[2], instruction[1], instruction[0]);
-				send_instruction(instruction, node, $feof(data_file));
+				send_instruction(instruction, node, $feof(data_file) > 0);
 			end
 		end
 	endtask
@@ -353,7 +370,7 @@ module axis_mesh_mlp_tb();
 				end
 				scan_file = $fscanf(data_file, "\n");
 				
-				send_weight(data, dpe, addr++, node, $feof(data_file));
+				send_weight(data, dpe, addr++, node, $feof(data_file) > 0);
 			end
 		end
 	endtask
@@ -405,7 +422,7 @@ module axis_mesh_mlp_tb();
 		input integer dpe;
 		input [8:0] rf_addr;
 		input integer node;
-		input last;
+		input bit last;
 
 		static int row = node_r(WEIGHT_LOADER_NODE_ID);
 		static int col = node_c(WEIGHT_LOADER_NODE_ID);

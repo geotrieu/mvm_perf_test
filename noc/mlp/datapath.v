@@ -4,7 +4,9 @@ module datapath # (
 	parameter IPREC = 8,
 	parameter OPREC = 32,
 	parameter MEM_DEPTH = 512,
-	parameter ADDRW = $clog2(MEM_DEPTH)
+	parameter ADDRW = $clog2(MEM_DEPTH),
+	parameter MVM_NODE_ID = -1,
+	parameter DPE_ID = -1
 )(
 	input              	clk,
 	input              	rst,
@@ -27,6 +29,7 @@ wire dpe_valid, dpe_accum, dpe_last, accum_valid, accum_reduce;
 wire [OPREC-1:0] dpe_result, accum_result;
 wire [IPREC-1:0] accum_datac;
 wire [ADDRW-1:0] dpe_accum_addr;
+wire [DATAW-1:0] r_idataa, r_idatab;
 
 pipeline # (
 	.DELAY(DPE_LATENCY),
@@ -62,6 +65,24 @@ dpe # (
 	.o_valid(dpe_valid),
 	.o_result(dpe_result)
 );
+
+pipeline # (
+	.DELAY(DPE_LATENCY),
+	.WIDTH(DATAW*2)
+) debug_pipeline (
+	.clk(clk),
+	.rst(rst),
+	.data_in({i_dataa, i_datab}),
+	.data_out({r_idataa, r_idatab})
+);
+
+always @(posedge clk) begin
+	if (dpe_valid) begin
+		$display("INPUTA: %h", r_idataa);
+		$display("INPUTB: %h", r_idatab);
+		$display("MVM %h, DPE %h, DPE RESULT %h", MVM_NODE_ID, DPE_ID, dpe_result);
+	end
+end
 
 accum # (
 	.DATAW(OPREC),
