@@ -327,7 +327,7 @@ module axis_mesh_mlp_tb();
 			inputs.delete();
 			data_file = $fopen(file, "r");
 			while(!$feof(data_file)) begin
-				for (int i = LANES - 1; i >=0; i--) begin
+				for (int i = 0; i < LANES; i++) begin
 					scan_file = $fscanf(data_file, "%d ", data[i*IPRECISION +: IPRECISION]);
 				end
 				scan_file = $fscanf(data_file, "\n");

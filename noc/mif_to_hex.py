@@ -22,9 +22,12 @@ def translate(path):
         with open(p, 'r') as f:
             for row in f:
                 weights = row.strip().split(" ")
+                weight_string = ""
                 for weight in weights:
-                    translated_file.write(tohex2scomplement(int(weight)))
-                translated_file.write("\n")
+                    # Effectively adds the hex to the FRONT of the string.
+                    # i.e. the 1st DEC # on the 1st line in the .mif file corresponds to the last HEX # on the 1st line of the .hex file
+                    weight_string = tohex2scomplement(int(weight)) + weight_string
+                translated_file.write(weight_string + "\n")
 
 if __name__ == "__main__":
     # Parse arguments
