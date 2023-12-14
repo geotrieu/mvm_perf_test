@@ -26,25 +26,25 @@ module axis_mesh_mlp_tb();
 	 localparam string ROUTING_TABLE_PREFIX = $sformatf("%s%s", PROJECT_DIR, "routing_tables/mesh_4x4/");
 
 	 localparam LANES = 64;
-	 localparam DPES = 64;
+	 localparam DPES = 2;
 	 localparam IPRECISION = 8;
 
 	 
-	 /*localparam string INST_MIFS = $sformatf("%s%s", PROJECT_DIR, "test_compiler/inst_mifs/");
+	 localparam string INST_MIFS = $sformatf("%s%s", PROJECT_DIR, "test_compiler/inst_mifs/");
 	 localparam string WEIGHT_MIFS = $sformatf("%s%s", PROJECT_DIR, "test_compiler/weight_mifs/preload/");
 	 localparam string INPUT_MIFS = $sformatf("%s%s", PROJECT_DIR, "test_compiler/input_mifs/");
 	 localparam NUM_LAYERS = 2;
-	 localparam integer NUM_MVMS[NUM_LAYERS] = {2, 1};
+	 localparam integer NUM_MVMS[NUM_LAYERS] = {2,1};
 	 localparam NUM_MVMS_FIRST_LAYER = NUM_MVMS[0];
 	 localparam MAX_MVMS = 2;
 	 localparam integer DISPATCHER_NODE_IDS[NUM_MVMS[0]] = {0,1};
 	 localparam integer MVM_NODE_IDS[NUM_LAYERS][MAX_MVMS] = {{3,4},{5,99}};
 	 localparam WEIGHT_LOADER_NODE_ID = 13;
 	 localparam INST_LOADER_NODE_ID = 14;
-	 localparam COLLECTOR_NODE_ID = 15;*/
+	 localparam COLLECTOR_NODE_ID = 15;
 	 
 	
-	 localparam string INST_MIFS = $sformatf("%s%s", PROJECT_DIR, "compiler/inst_mifs/");
+	 /*localparam string INST_MIFS = $sformatf("%s%s", PROJECT_DIR, "compiler/inst_mifs/");
 	 localparam string WEIGHT_MIFS = $sformatf("%s%s", PROJECT_DIR, "compiler/weight_mifs/preload/");
 	 localparam string INPUT_MIFS = $sformatf("%s%s", PROJECT_DIR, "compiler/input_mifs/");
 	 localparam NUM_LAYERS = 4;
@@ -55,7 +55,7 @@ module axis_mesh_mlp_tb();
 	 localparam integer MVM_NODE_IDS[NUM_LAYERS][MAX_MVMS] = {{2,1,9},{14,11,12},{10,3,99},{8,7,99}};
 	 localparam WEIGHT_LOADER_NODE_ID = 13;
 	 localparam INST_LOADER_NODE_ID = 15;
-	 localparam COLLECTOR_NODE_ID = 0;
+	 localparam COLLECTOR_NODE_ID = 0;*/
 
     logic clk, clk_noc, rst_n;
 	 
