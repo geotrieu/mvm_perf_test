@@ -26,13 +26,14 @@ module axis_mesh_mlp_tb();
 	 localparam string ROUTING_TABLE_PREFIX = $sformatf("%s%s", PROJECT_DIR, "routing_tables/mesh_4x4/");
 
 	 localparam LANES = 64;
-	 localparam DPES = 2;
 	 localparam IPRECISION = 8;
 
-	 
+	// Test Compiler MIF Set
+	 /*localparam DPES = 2;
 	 localparam string INST_MIFS = $sformatf("%s%s", PROJECT_DIR, "test_compiler/inst_mifs/");
 	 localparam string WEIGHT_MIFS = $sformatf("%s%s", PROJECT_DIR, "test_compiler/weight_mifs/preload/");
 	 localparam string INPUT_MIFS = $sformatf("%s%s", PROJECT_DIR, "test_compiler/input_mifs/");
+	 localparam string GOLDEN_OUTPUT_MIF = $sformatf("%s%s", PROJECT_DIR, "test_compiler/golden_outputs.mif");
 	 localparam NUM_LAYERS = 2;
 	 localparam integer NUM_MVMS[NUM_LAYERS] = {2,1};
 	 localparam NUM_MVMS_FIRST_LAYER = NUM_MVMS[0];
@@ -41,12 +42,14 @@ module axis_mesh_mlp_tb();
 	 localparam integer MVM_NODE_IDS[NUM_LAYERS][MAX_MVMS] = {{3,4},{5,99}};
 	 localparam WEIGHT_LOADER_NODE_ID = 13;
 	 localparam INST_LOADER_NODE_ID = 14;
-	 localparam COLLECTOR_NODE_ID = 15;
-	 
+	 localparam COLLECTOR_NODE_ID = 15;*/
 	
-	 /*localparam string INST_MIFS = $sformatf("%s%s", PROJECT_DIR, "compiler/inst_mifs/");
+	// Production Compiler MIF Set
+	 localparam DPES = 64;
+	 localparam string INST_MIFS = $sformatf("%s%s", PROJECT_DIR, "compiler/inst_mifs/");
 	 localparam string WEIGHT_MIFS = $sformatf("%s%s", PROJECT_DIR, "compiler/weight_mifs/preload/");
 	 localparam string INPUT_MIFS = $sformatf("%s%s", PROJECT_DIR, "compiler/input_mifs/");
+	 localparam string GOLDEN_OUTPUT_MIF = $sformatf("%s%s", PROJECT_DIR, "compiler/golden_outputs.mif");
 	 localparam NUM_LAYERS = 4;
 	 localparam integer NUM_MVMS[NUM_LAYERS] = {3,3,2,2};
 	 localparam NUM_MVMS_FIRST_LAYER = NUM_MVMS[0];
@@ -55,7 +58,7 @@ module axis_mesh_mlp_tb();
 	 localparam integer MVM_NODE_IDS[NUM_LAYERS][MAX_MVMS] = {{2,1,9},{14,11,12},{10,3,99},{8,7,99}};
 	 localparam WEIGHT_LOADER_NODE_ID = 13;
 	 localparam INST_LOADER_NODE_ID = 15;
-	 localparam COLLECTOR_NODE_ID = 0;*/
+	 localparam COLLECTOR_NODE_ID = 0;
 
     logic clk, clk_noc, rst_n;
 	 
@@ -158,26 +161,27 @@ module axis_mesh_mlp_tb();
 	
 	integer count;
 	bit passing;
+	integer data_file, scan_file;
+	logic [IPRECISION - 1:0] golden_output;
 	
 	initial begin
 		// check
 		count = 0;
 		passing = 1;
+		data_file = $fopen(GOLDEN_OUTPUT_MIF, "r");
 		forever begin
 			@(negedge clk);
 			if (collector_fifo_ren && collector_fifo_rdy) begin
-				$display("Received:");
+				$display("Vector Results: (dut result : golden result)");
 				for (int dpe = 0; dpe < DPES; dpe++) begin
-					$display("%0d", collector_fifo_rdata[dpe*IPRECISION +: IPRECISION]);
+					scan_file = $fscanf(data_file, "%d ", golden_output);
+
+					$display("%0d : %0d", collector_fifo_rdata[dpe*IPRECISION +: IPRECISION], golden_output);
+					if (collector_fifo_rdata[dpe*IPRECISION +: IPRECISION] !== golden_output) passing = 0;
 				end
-				case (++count)
-					1: if (collector_fifo_rdata !== 64'h3) passing = 0;
-					2: if (collector_fifo_rdata !== 64'h6) passing = 0;
-					3: if (collector_fifo_rdata !== 64'h9) passing = 0;
-					4: if (collector_fifo_rdata !== 64'hc) passing = 0;
-				endcase
+				scan_file = $fscanf(data_file, "\n");
 				
-				if (count == 4) begin
+				if ($feof(data_file)) begin
 					if (passing) $display("PASS");
 					else $display("FAIL");
 					$finish;
