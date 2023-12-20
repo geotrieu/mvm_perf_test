@@ -37,7 +37,6 @@ module mvm # (
 	parameter FIFOD = 64,          // Depth of input, accumulation, and output FIFOs
 	parameter DATAPATH_DELAY = 12,  // Delay of datpath (inputs -> result)
 	parameter MEM_INIT_FILE_PREFIX = "",
-	parameter MVM_NODE_ID = -1,
 	parameter DATAUSERW = DATAW + USERW
 	
 )(
@@ -238,9 +237,7 @@ for (dpe_id = 0; dpe_id < DPES; dpe_id = dpe_id + 1) begin: generate_datapath
 		.DATAW(DATAW),
 		.IPREC(IPRECISION),
 		.OPREC(OPRECISION),
-		.MEM_DEPTH(RFDEPTH),
-		.MVM_NODE_ID(MVM_NODE_ID),
-		.DPE_ID(dpe_id)
+		.MEM_DEPTH(RFDEPTH)
 	) datapath_inst (
 		.clk(clk),
 		.rst(rst),

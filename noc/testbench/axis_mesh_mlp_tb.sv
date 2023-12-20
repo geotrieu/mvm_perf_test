@@ -206,8 +206,7 @@ module axis_mesh_mlp_tb();
 					.IDW(TID_WIDTH),            // Bitwidth of axi-s tid
 					.DESTW(TDEST_WIDTH),		   // Bitwidth of axi-s tdest
 					.MEM_INIT_FILE_PREFIX(weight_hex_prefix),
-					.DPES(DPES),
-					.MVM_NODE_ID(MVM_NODE_IDS[layer_id][mvm_id])
+					.DPES(DPES)
 				) mvm_inst (
 					.clk,
 					.rst(~rst_n),
