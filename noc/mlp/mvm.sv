@@ -34,7 +34,7 @@ module mvm # (
 	parameter INSTADDRW = $clog2(INSTD),  // Bitwidth of instruction memory address
 	parameter AXIS_OPS = 4, // Number of AXI-S operations (max 4) {instruction, reduction vector, input vector, matrix}
 	parameter AXIS_OPSW = $clog2(AXIS_OPS),
-	parameter FIFOD = 64,          // Depth of input, accumulation, and output FIFOs
+	parameter FIFOD = 512,          // Depth of input, accumulation, and output FIFOs
 	parameter DATAPATH_DELAY = 12,  // Delay of datpath (inputs -> result)
 	parameter MEM_INIT_FILE_PREFIX = "",
 	parameter DATAUSERW = DATAW + USERW

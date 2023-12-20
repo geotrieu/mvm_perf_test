@@ -12,7 +12,7 @@ module axis_mesh_mlp_tb();
     localparam TID_WIDTH = 2;
 
     localparam SERIALIZATION_FACTOR = 1;
-    localparam CLKCROSS_FACTOR = 5;
+    localparam CLKCROSS_FACTOR = 4;
 
     localparam SINGLE_CLOCK = ((CLKCROSS_FACTOR == 1) ? 1 : 0);
 
@@ -186,7 +186,7 @@ module axis_mesh_mlp_tb();
 				if ($feof(data_file)) begin
 					if (passing) $display("PASS");
 					else $display("FAIL");
-					$finish;
+					$stop();
 				end
 			end
 		end

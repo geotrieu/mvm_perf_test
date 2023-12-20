@@ -35,7 +35,7 @@ module dispatcher # (
 	
 	fifo #(
 		.DATAW(DATAW),
-		.DEPTH(64)
+		.DEPTH(512)
 	) data_fifo (
 	   .clk,
 	   .rst,
