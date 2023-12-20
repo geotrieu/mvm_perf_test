@@ -142,6 +142,8 @@ module axis_mesh_mlp_tb();
 		end
 		$display("Done loading Weights");*/
 
+		$stop();
+
 		still_have_inputs_to_feed = 1'b1;
 		while (still_have_inputs_to_feed) begin
 			for (int dispatcher = 0; dispatcher < NUM_MVMS_FIRST_LAYER; dispatcher++) begin
@@ -172,11 +174,11 @@ module axis_mesh_mlp_tb();
 		forever begin
 			@(negedge clk);
 			if (collector_fifo_ren && collector_fifo_rdy) begin
-				$display("Vector Results: (dut result : golden result)");
+				//$display("Vector Results: (dut result : golden result)");
 				for (int dpe = 0; dpe < DPES; dpe++) begin
 					scan_file = $fscanf(data_file, "%d ", golden_output);
 
-					$display("%0d : %0d", collector_fifo_rdata[dpe*IPRECISION +: IPRECISION], golden_output);
+					//$display("%0d : %0d", collector_fifo_rdata[dpe*IPRECISION +: IPRECISION], golden_output);
 					if (collector_fifo_rdata[dpe*IPRECISION +: IPRECISION] !== golden_output) passing = 0;
 				end
 				scan_file = $fscanf(data_file, "\n");
