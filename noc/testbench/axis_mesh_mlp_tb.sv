@@ -12,11 +12,11 @@ module axis_mesh_mlp_tb();
     localparam TID_WIDTH = 2;
 
     localparam SERIALIZATION_FACTOR = 1;
-    localparam CLKCROSS_FACTOR = 2;
+    localparam CLKCROSS_FACTOR = 5;
 
     localparam SINGLE_CLOCK = ((CLKCROSS_FACTOR == 1) ? 1 : 0);
 
-    localparam USR_CLK_PERIOD = real'(10);
+    localparam USR_CLK_PERIOD = real'(5);
     localparam NOC_CLK_PERIOD = USR_CLK_PERIOD / CLKCROSS_FACTOR;
 
     localparam USR_CLK_SWITCH = USR_CLK_PERIOD / 2;

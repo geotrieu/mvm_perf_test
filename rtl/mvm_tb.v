@@ -12,7 +12,8 @@ localparam OPRECISION = 32;     // Output precision in bits
 localparam LANES = DATAW / IPRECISION;  // Number of dot-product INT8 lanes
 localparam DPES  = LANES;       // Number of dot-product engines 
 localparam CLK_PERIOD = 4;
-localparam NUM_REPEATS = 1;
+localparam NUM_DPES = 64;
+localparam NUM_REPEATS = 100;
 
 reg clk, rst, rx_tvalid, tx_tready;
 reg [DATAW-1:0] rx_tdata;
@@ -90,28 +91,52 @@ initial begin
 	rx_tdata = 32'b0_000000000_000000011_000000011_1_0_0_0;
 	rx_tvalid = 1'b1;
 	#(CLK_PERIOD);
-	
-	// Send Instruction 4 (Calculate DP of first chunk, second input vector (last), accumulate, reduce, and release IV to node 1)
+
+	// Send Instruction 4 (Calculate DP of first chunk, second input vector, accumulate)
 	rx_tuser = {64'h0, 2'h0, 9'h0};
-	rx_tdata = 32'b1_000000001_000100000_000000000_0_1_1_0;
+	rx_tdata = 32'b0_000000000_000000100_000000000_0_0_1_0;
 	rx_tvalid = 1'b1;
 	#(CLK_PERIOD);
 	
-	// Send Instruction 5 (Calculate DP of second chunk, second input vector (last), accumulate, reduce, and release IV to node 2)
+	// Send Instruction 5 (Calculate DP of second chunk, second input vector, accumulate)
 	rx_tuser = {64'h0, 2'h0, 9'h0};
-	rx_tdata = 32'b1_000000010_000100001_000000001_0_1_1_0;
+	rx_tdata = 32'b0_000000000_000000101_000000001_0_0_1_0;
 	rx_tvalid = 1'b1;
 	#(CLK_PERIOD);
 	
-	// Send Instruction 6 (Calculate DP of third chunk, second input vector (last), accumulate, reduce, and release IV to node 1)
+	// Send Instruction 6 (Calculate DP of third chunk, second input vector, accumulate)
 	rx_tuser = {64'h0, 2'h0, 9'h0};
-	rx_tdata = 32'b1_000000001_000100010_000000010_0_1_1_0;
+	rx_tdata = 32'b0_000000000_000000110_000000010_0_0_1_0;
 	rx_tvalid = 1'b1;
 	#(CLK_PERIOD);
 	
-	// Send Instruction 7 (Calculate DP of fourth chunk (last), second input vector (last), accumulate, reduce, and release IV to node 2)
+	// Send Instruction 7 (Calculate DP of fourth chunk (last), second input vector, accumulate)
 	rx_tuser = {64'h0, 2'h0, 9'h0};
-	rx_tdata = 32'b1_000000010_000100011_000000011_1_1_1_0;
+	rx_tdata = 32'b0_000000000_000000111_000000011_1_0_1_0;
+	rx_tvalid = 1'b1;
+	#(CLK_PERIOD);
+	
+	// Send Instruction 8 (Calculate DP of first chunk, third input vector (last), accumulate, and release IV to node 1)
+	rx_tuser = {64'h0, 2'h0, 9'h0};
+	rx_tdata = 32'b1_000000001_000001000_000000000_0_1_1_0;
+	rx_tvalid = 1'b1;
+	#(CLK_PERIOD);
+	
+	// Send Instruction 9 (Calculate DP of second chunk, third input vector (last), accumulate, and release IV to node 2)
+	rx_tuser = {64'h0, 2'h0, 9'h0};
+	rx_tdata = 32'b1_000000010_000001001_000000001_0_1_1_0;
+	rx_tvalid = 1'b1;
+	#(CLK_PERIOD);
+	
+	// Send Instruction 10 (Calculate DP of third chunk, third input vector (last), accumulate, and release IV to node 1)
+	rx_tuser = {64'h0, 2'h0, 9'h0};
+	rx_tdata = 32'b1_000000001_000001010_000000010_0_1_1_0;
+	rx_tvalid = 1'b1;
+	#(CLK_PERIOD);
+	
+	// Send Instruction 11 (Calculate DP of fourth chunk (last), third input vector (last), accumulate, and release IV to node 2)
+	rx_tuser = {64'h0, 2'h0, 9'h0};
+	rx_tdata = 32'b1_000000010_000001011_000000011_1_1_1_0;
 	rx_tvalid = 1'b1;
 	#(CLK_PERIOD);
 	/****************************************************************************************/
@@ -120,7 +145,7 @@ initial begin
 	// Send Matrix Data to RFi, chunk 0, first input vector
 	rx_tvalid = 1'b1;
 	onehot = 64'b1;
-	for (i = 1; i <= 2; i = i + 1) begin
+	for (i = 1; i <= NUM_DPES; i = i + 1) begin
 		rx_tuser = {onehot, 2'h3, 9'h000}; //write to RFi, matrix data op, input vector 0, chunk 0
 		rx_tdata = {8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
 					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
@@ -133,7 +158,7 @@ initial begin
 	// Send Matrix Data to RFi, chunk 1, first input vector
 	rx_tvalid = 1'b1;
 	onehot = 64'b1;
-	for (i = 1; i <= 2; i = i + 1) begin
+	for (i = 1; i <= NUM_DPES; i = i + 1) begin
 		rx_tuser = {onehot, 2'h3, 9'h001}; //write to RFi, matrix data op, input vector 0, chunk 1
 		rx_tdata = {8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
 					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
@@ -146,7 +171,7 @@ initial begin
 	// Send Matrix Data to RFi, chunk 2, first input vector
 	rx_tvalid = 1'b1;
 	onehot = 64'b1;
-	for (i = 1; i <= 2; i = i + 1) begin
+	for (i = 1; i <= NUM_DPES; i = i + 1) begin
 		rx_tuser = {onehot, 2'h3, 9'h002}; //write to RFi, matrix data op, input vector 0, chunk 2
 		rx_tdata = {8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
 					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
@@ -159,7 +184,7 @@ initial begin
 	// Send Matrix Data to RFi, chunk 3, first input vector
 	rx_tvalid = 1'b1;
 	onehot = 64'b1;
-	for (i = 1; i <= 2; i = i + 1) begin
+	for (i = 1; i <= NUM_DPES; i = i + 1) begin
 		rx_tuser = {onehot, 2'h3, 9'h003}; //write to RFi, matrix data op, input vector 0, chunk 3
 		rx_tdata = {8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
 					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
@@ -172,12 +197,12 @@ initial begin
 	// Send Matrix Data to RFi, chunk 0, second input vector
 	rx_tvalid = 1'b1;
 	onehot = 64'b1;
-	for (i = 1; i <= 2; i = i + 1) begin
-		rx_tuser = {onehot, 2'h3, 9'h020}; //write to RFi, matrix data op, input vector 1, chunk 0
+	for (i = 1; i <= NUM_DPES; i = i + 1) begin
+		rx_tuser = {onehot, 2'h3, 9'h004}; //write to RFi, matrix data op, input vector 1, chunk 0
 		rx_tdata = {8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
 					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
 					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
-					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd4, 8'd4, 8'd4}; // [4,4,4]
+					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd1, 8'd1, 8'd1}; // [1,1,1]
 		onehot = onehot << 1;
 		#(CLK_PERIOD);
 	end
@@ -185,21 +210,8 @@ initial begin
 	// Send Matrix Data to RFi, chunk 1, second input vector
 	rx_tvalid = 1'b1;
 	onehot = 64'b1;
-	for (i = 1; i <= 2; i = i + 1) begin
-		rx_tuser = {onehot, 2'h3, 9'h021}; //write to RFi, matrix data op, input vector 1, chunk 1
-		rx_tdata = {8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
-					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
-					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
-					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd3, 8'd3, 8'd3}; // [3,3,3]
-		onehot = onehot << 1;
-		#(CLK_PERIOD);
-	end
-	
-	// Send Matrix Data to RFi, chunk 2, second input vector
-	rx_tvalid = 1'b1;
-	onehot = 64'b1;
-	for (i = 1; i <= 2; i = i + 1) begin
-		rx_tuser = {onehot, 2'h3, 9'h022}; //write to RFi, matrix data op, input vector 1, chunk 2
+	for (i = 1; i <= NUM_DPES; i = i + 1) begin
+		rx_tuser = {onehot, 2'h3, 9'h005}; //write to RFi, matrix data op, input vector 1, chunk 1
 		rx_tdata = {8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
 					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
 					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
@@ -208,15 +220,80 @@ initial begin
 		#(CLK_PERIOD);
 	end
 	
+	// Send Matrix Data to RFi, chunk 2, second input vector
+	rx_tvalid = 1'b1;
+	onehot = 64'b1;
+	for (i = 1; i <= NUM_DPES; i = i + 1) begin
+		rx_tuser = {onehot, 2'h3, 9'h006}; //write to RFi, matrix data op, input vector 1, chunk 2
+		rx_tdata = {8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
+					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
+					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
+					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd3, 8'd3, 8'd3}; // [3,3,3]
+		onehot = onehot << 1;
+		#(CLK_PERIOD);
+	end
+	
 	// Send Matrix Data to RFi, chunk 3, second input vector
 	rx_tvalid = 1'b1;
 	onehot = 64'b1;
-	for (i = 1; i <= 2; i = i + 1) begin
-		rx_tuser = {onehot, 2'h3, 9'h023}; //write to RFi, matrix data op, input vector 1, chunk 3
+	for (i = 1; i <= NUM_DPES; i = i + 1) begin
+		rx_tuser = {onehot, 2'h3, 9'h007}; //write to RFi, matrix data op, input vector 1, chunk 3
+		rx_tdata = {8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
+					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
+					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
+					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd4, 8'd4, 8'd4}; // [4,4,4]
+		onehot = onehot << 1;
+		#(CLK_PERIOD);
+	end
+
+	// Send Matrix Data to RFi, chunk 0, third input vector
+	rx_tvalid = 1'b1;
+	onehot = 64'b1;
+	for (i = 1; i <= NUM_DPES; i = i + 1) begin
+		rx_tuser = {onehot, 2'h3, 9'h008}; //write to RFi, matrix data op, input vector 2, chunk 0
 		rx_tdata = {8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
 					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
 					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
 					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd1, 8'd1, 8'd1}; // [1,1,1]
+		onehot = onehot << 1;
+		#(CLK_PERIOD);
+	end
+	
+	// Send Matrix Data to RFi, chunk 1, third input vector
+	rx_tvalid = 1'b1;
+	onehot = 64'b1;
+	for (i = 1; i <= NUM_DPES; i = i + 1) begin
+		rx_tuser = {onehot, 2'h3, 9'h009}; //write to RFi, matrix data op, input vector 2, chunk 1
+		rx_tdata = {8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
+					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
+					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
+					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd2, 8'd2, 8'd2}; // [2,2,2]
+		onehot = onehot << 1;
+		#(CLK_PERIOD);
+	end
+	
+	// Send Matrix Data to RFi, chunk 2, third input vector
+	rx_tvalid = 1'b1;
+	onehot = 64'b1;
+	for (i = 1; i <= NUM_DPES; i = i + 1) begin
+		rx_tuser = {onehot, 2'h3, 9'h00a}; //write to RFi, matrix data op, input vector 2, chunk 2
+		rx_tdata = {8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
+					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
+					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
+					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd3, 8'd3, 8'd3}; // [3,3,3]
+		onehot = onehot << 1;
+		#(CLK_PERIOD);
+	end
+	
+	// Send Matrix Data to RFi, chunk 3, third input vector
+	rx_tvalid = 1'b1;
+	onehot = 64'b1;
+	for (i = 1; i <= NUM_DPES; i = i + 1) begin
+		rx_tuser = {onehot, 2'h3, 9'h00b}; //write to RFi, matrix data op, input vector 2, chunk 3
+		rx_tdata = {8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
+					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
+					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
+					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd4, 8'd4, 8'd4}; // [4,4,4]
 		onehot = onehot << 1;
 		#(CLK_PERIOD);
 	end
@@ -241,6 +318,15 @@ initial begin
 					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
 					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
 					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd2, 8'd2, 8'd2}; // [2,2,2]
+		rx_tvalid = 1'b1;
+		#(CLK_PERIOD);
+
+		// Send Input Vector 2
+		rx_tuser = {64'h0, 2'h2, 9'h0};
+		rx_tdata = {8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
+					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
+					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 
+					  8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd0, 8'd3, 8'd3, 8'd3}; // [3,3,3]
 		rx_tvalid = 1'b1;
 		#(CLK_PERIOD);
 	end
@@ -302,13 +388,13 @@ initial begin
 	repeats = 0;
 	while (1'b1) begin
 		if (tx_tvalid) begin
-			if 			(count == 0 && (tx_tdata !== 16'h1B1B || tx_tuser[10:9] !== 2'h2 || tx_tdest !== 1)) begin
+			if 			(count == 0 && (tx_tdata !== {NUM_DPES{8'h12}} || tx_tuser[10:9] !== 2'h2 || tx_tdest !== 1)) begin
 				passing = 0;
-			end else if (count == 1 && (tx_tdata !== 16'h1818 || tx_tuser[10:9] !== 2'h2 || tx_tdest !== 2)) begin
+			end else if (count == 1 && (tx_tdata !== {NUM_DPES{8'h24}} || tx_tuser[10:9] !== 2'h2 || tx_tdest !== 2)) begin
 				passing = 0;
-			end else if (count == 2 && (tx_tdata !== 16'h1515 || tx_tuser[10:9] !== 2'h2 || tx_tdest !== 1)) begin
+			end else if (count == 2 && (tx_tdata !== {NUM_DPES{8'h36}} || tx_tuser[10:9] !== 2'h2 || tx_tdest !== 1)) begin
 				passing = 0;
-			end else if (count == 3 && (tx_tdata !== 16'h1212 || tx_tuser[10:9] !== 2'h2 || tx_tdest !== 2)) begin
+			end else if (count == 3 && (tx_tdata !== {NUM_DPES{8'h48}} || tx_tuser[10:9] !== 2'h2 || tx_tdest !== 2)) begin
 				passing = 0;
 			end
 			count = count + 1;

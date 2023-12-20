@@ -30,21 +30,37 @@ void TestBench::Dispatch() {
 	// Send Instruction 3 (Calculate DP of fourth chunk (last), first input vector)
 	SendInstruction(0b0'000000000'000000011'000000011'1'0'0'0);
 	wait();
-	
-	// Send Instruction 4 (Calculate DP of first chunk, second input vector (last), accumulate, reduce, and release IV to node 1)
-	SendInstruction(0b1'000000001'000100000'000000000'0'1'1'0);
+
+    // Send Instruction 4 (Calculate DP of first chunk, second input vector, accumulate)
+	SendInstruction(0b0'000000000'000000100'000000000'0'0'1'0);
 	wait();
 	
-	// Send Instruction 5 (Calculate DP of second chunk, second input vector (last), accumulate, reduce, and release IV to node 2)
-	SendInstruction(0b1'000000010'000100001'000000001'0'1'1'0);
+	// Send Instruction 5 (Calculate DP of second chunk, second input vector, accumulate)
+	SendInstruction(0b0'000000000'000000101'000000001'0'0'1'0);
 	wait();
 	
-	// Send Instruction 6 (Calculate DP of third chunk, second input vector (last), accumulate, reduce, and release IV to node 1)
-	SendInstruction(0b1'000000001'000100010'000000010'0'1'1'0);
+	// Send Instruction 6 (Calculate DP of third chunk, second input vector, accumulate)
+	SendInstruction(0b0'000000000'000000110'000000010'0'0'1'0);
 	wait();
 	
-	// Send Instruction 7 (Calculate DP of fourth chunk (last), second input vector (last), accumulate, reduce, and release IV to node 2)
-	SendInstruction(0b1'000000010'000100011'000000011'1'1'1'0);
+	// Send Instruction 7 (Calculate DP of fourth chunk (last), second input vector, accumulate)
+	SendInstruction(0b0'000000000'000000111'000000011'1'0'1'0);
+	wait();
+	
+	// Send Instruction 8 (Calculate DP of first chunk, third input vector (last), accumulate, and release IV to node 1)
+	SendInstruction(0b1'000000001'000001000'000000000'0'1'1'0);
+	wait();
+	
+	// Send Instruction 9 (Calculate DP of second chunk, third input vector (last), accumulate, and release IV to node 2)
+	SendInstruction(0b1'000000010'000001001'000000001'0'1'1'0);
+	wait();
+	
+	// Send Instruction 10 (Calculate DP of third chunk, third input vector (last), accumulate, and release IV to node 1)
+	SendInstruction(0b1'000000001'000001010'000000010'0'1'1'0);
+	wait();
+	
+	// Send Instruction 11 (Calculate DP of fourth chunk (last), third input vector (last), accumulate, and release IV to node 2)
+	SendInstruction(0b1'000000010'000001011'000000011'1'1'1'0);
 	wait();
 	/****************************************************************************************/
     std::cout << "All Instructions sent!" << std::endl;
@@ -79,30 +95,58 @@ void TestBench::Dispatch() {
     }
 	
 	// Send Matrix Data to RFi, chunk 0, second input vector
-	for (int dpe = 0; dpe < NUM_DPES; dpe++) {
-        sc_bv<DATAW> data = (4 << 16) | (4 << 8) | (4); // [4,4,4]
-        SendWeights(dpe, data, 0x20);
+    for (int dpe = 0; dpe < NUM_DPES; dpe++) {
+        sc_bv<DATAW> data = (1 << 16) | (1 << 8) | (1); // [1,1,1]
+        SendWeights(dpe, data, 0x4);
         wait();
     }
 	
 	// Send Matrix Data to RFi, chunk 1, second input vector
 	for (int dpe = 0; dpe < NUM_DPES; dpe++) {
-        sc_bv<DATAW> data = (3 << 16) | (3 << 8) | (3); // [3,3,3]
-        SendWeights(dpe, data, 0x21);
+        sc_bv<DATAW> data = (2 << 16) | (2 << 8) | (2); // [2,2,2]
+        SendWeights(dpe, data, 0x5);
         wait();
     }
 	
 	// Send Matrix Data to RFi, chunk 2, second input vector
 	for (int dpe = 0; dpe < NUM_DPES; dpe++) {
-        sc_bv<DATAW> data = (2 << 16) | (2 << 8) | (2); // [2,2,2]
-        SendWeights(dpe, data, 0x22);
+        sc_bv<DATAW> data = (3 << 16) | (3 << 8) | (3); // [3,3,3]
+        SendWeights(dpe, data, 0x6);
         wait();
     }
 	
 	// Send Matrix Data to RFi, chunk 3, second input vector
 	for (int dpe = 0; dpe < NUM_DPES; dpe++) {
+        sc_bv<DATAW> data = (4 << 16) | (4 << 8) | (4); // [4,4,4]
+        SendWeights(dpe, data, 0x7);
+        wait();
+    }
+
+    // Send Matrix Data to RFi, chunk 0, third input vector
+    for (int dpe = 0; dpe < NUM_DPES; dpe++) {
         sc_bv<DATAW> data = (1 << 16) | (1 << 8) | (1); // [1,1,1]
-        SendWeights(dpe, data, 0x23);
+        SendWeights(dpe, data, 0x8);
+        wait();
+    }
+	
+	// Send Matrix Data to RFi, chunk 1, third input vector
+	for (int dpe = 0; dpe < NUM_DPES; dpe++) {
+        sc_bv<DATAW> data = (2 << 16) | (2 << 8) | (2); // [2,2,2]
+        SendWeights(dpe, data, 0x9);
+        wait();
+    }
+	
+	// Send Matrix Data to RFi, chunk 2, third input vector
+	for (int dpe = 0; dpe < NUM_DPES; dpe++) {
+        sc_bv<DATAW> data = (3 << 16) | (3 << 8) | (3); // [3,3,3]
+        SendWeights(dpe, data, 0xA);
+        wait();
+    }
+	
+	// Send Matrix Data to RFi, chunk 3, third input vector
+	for (int dpe = 0; dpe < NUM_DPES; dpe++) {
+        sc_bv<DATAW> data = (4 << 16) | (4 << 8) | (4); // [4,4,4]
+        SendWeights(dpe, data, 0xB);
         wait();
     }
 	/****************************************************************************************/
@@ -120,6 +164,10 @@ void TestBench::Dispatch() {
         
         // Send Input Vector 1
         SendInputVector((2 << 16) | (2 << 8) | (2)); // [2,2,2]
+        wait();
+
+        // Send Input Vector 2
+        SendInputVector((3 << 16) | (3 << 8) | (3)); // [3,3,3]
         wait();
     }
 	/****************************************************************************************/
@@ -139,16 +187,28 @@ void TestBench::Collect() {
             sc_bv<AXIS_DESTW> tdest = axis_tx.tdest.read();
             switch (count) {
                 case 0:
-                    if (tdata != 0x1B1B || tuser != 0x2 || tdest != 1) passing = 0;
+                    if (tuser != 0x2 || tdest != 1) passing = 0;
+                    for (int i = 0; i < NUM_DPES; i++) {
+                        if (tdata.range((i+1)*8-1,i*8) != 0x12) passing = 0;
+                    }
                     break;
                 case 1:
-                    if (tdata != 0x1818 || tuser != 0x2 || tdest != 2) passing = 0;
+                    if (tuser != 0x2 || tdest != 2) passing = 0;
+                    for (int i = 0; i < NUM_DPES; i++) {
+                        if (tdata.range((i+1)*8-1,i*8) != 0x24) passing = 0;
+                    }
                     break;
                 case 2:
-                    if (tdata != 0x1515 || tuser != 0x2 || tdest != 1) passing = 0;
+                    if (tuser != 0x2 || tdest != 1) passing = 0;
+                    for (int i = 0; i < NUM_DPES; i++) {
+                        if (tdata.range((i+1)*8-1,i*8) != 0x36) passing = 0;
+                    }
                     break;
                 case 3:
-                    if (tdata != 0x1212 || tuser != 0x2 || tdest != 2) passing = 0;
+                    if (tuser != 0x2 || tdest != 2) passing = 0;
+                    for (int i = 0; i < NUM_DPES; i++) {
+                        if (tdata.range((i+1)*8-1,i*8) != 0x48) passing = 0;
+                    }
                     break;
             }
             count++;

@@ -20,3 +20,6 @@ output_files/
 
 _info
 config.vh
+*.do
+*.clks
+*.place

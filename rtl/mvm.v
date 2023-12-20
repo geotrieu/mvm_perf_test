@@ -8,6 +8,10 @@
 //`define inst_release_dest(inst)   ``inst``[30:22]
 //`define inst_release_op(inst)    	``inst``[31]
 
+/**
+MVM Module
+Scalable Matrix Vector Multiplication implementation
+**/
 module mvm # (
 	parameter DATAW = 512,         // Bitwidth of axi-s tdata
 	parameter BYTEW = 8,   		   // Bitwidth of axi-s tkeep, tstrb
@@ -27,7 +31,7 @@ module mvm # (
 	parameter INSTADDRW = $clog2(INSTD),  // Bitwidth of instruction memory address
 	parameter AXIS_OPS = 4, // Number of AXI-S operations (max 4) {instruction, reduction vector, input vector, matrix}
 	parameter AXIS_OPSW = $clog2(AXIS_OPS),
-	parameter FIFOD = 256,          // Depth of input, accumulation, and output FIFOs
+	parameter FIFOD = 512,          // Depth of input, accumulation, and output FIFOs
 	parameter DATAPATH_DELAY = 12  // Delay of datpath (inputs -> result)
 )(
 	input  clk,
@@ -314,6 +318,7 @@ always @ (*) begin
 end
 
 // Process next instruction if there is an instruction and input vector available, and the output FIFO is able to take outputs
+//assign inst_fifo_pop = ~inst_fifo_empty && !input_fifo_empty && !output_fifo_almost_full;
 assign inst_fifo_pop = ~inst_fifo_empty && !input_fifo_empty && !output_fifo_almost_full && (!inst_reduce || !reduction_fifo_empty);
 // Pop reduction vector if a request to reduce is made, the reduction vector is available, and the next instruction is able to be processed
 assign reduction_fifo_pop = inst_reduce && !reduction_fifo_empty && inst_fifo_pop;
@@ -342,6 +347,7 @@ always @ (posedge clk) begin
 	end else begin
 		if (!inst_fifo_empty) begin
 			if (inst_reduce) begin
+				// TODO: Is this a good implementation? Wait until reduction vector arrives to do anything
 				// If there are input and reduction vectors available and output is able to take on new outputs
 				if (!input_fifo_empty && !reduction_fifo_empty && !output_fifo_almost_full) begin
 					r_inst_valid <= 1'b1;

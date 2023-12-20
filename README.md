@@ -8,6 +8,36 @@ This repo contains a couple of tests that can be ran
 Although not in the repo, a performance test of the MLP through a NoC simulation in RAD-Sim can be found in the
 mlp_int8 example design in the RAD-Sim repo.
 
+## MVM Kernel, Verilated in SystemC
+The testbench is in `testbench.cpp`.
+There are 2 main functions, Dispatch and Collect.
+They function similarly to the RAD-Sim dispatch and collect modules in the `mlp_int8` design.
+
+### Dispatch
+In the dispatch function, there are 3 sections.
+1) Instructions
+    1) Each instruction is written in binary, following the format outlined here: https://rad-flow.readthedocs.io/en/docs-dev/examples/rad-sim-mlp-int8-design.html#instruction-format
+2) Matrix Weights
+3) Input Vectors
+
+### Collect
+The collect function checks three things:
+1) The data returned is correct
+2) The node the output vector should be sent to
+3) If this output vector is a reduction vector or an input vector
+
+### Parameters
+There are two modifiable parameters in `testbench.hpp`.
+1) NUM_DPES: The number of DPES to simulate results for
+2) NUM_REPEATS: The number of times the input vectors should be sent in a loop
+
+## MVM Kernel, Simulated in ModelSim
+The testbench is located in `rtl/mvm_tb.v`.
+The parameters and structure is similar to the Verilated System C testbench as outlined above.
+
+The one difference is this testbench supports reduction vectors should you wish.
+There is a commented block that sends the reduction vectors.
+
 ## MLP Simulation on ModelSim NoC
 The NoC design is provided by CMU, and can be found here: https://github.com/ShashankOV/noc.
 

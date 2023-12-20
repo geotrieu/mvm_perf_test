@@ -421,20 +421,6 @@ fifo # (
 	.almost_full(output_fifo_almost_full)
 );
 
-always @(input_fifo_odata) begin
-	if (!input_fifo_empty) begin
-		$display("MVM NODE: %h, IV: %h", MVM_NODE_ID, input_fifo_odata);
-	end
-end
-
-always @(posedge clk) begin
-	if (axis_tx_tvalid && axis_tx_tready) begin
-		$display("MVM_NODE: %h, DESTINATION: %h", MVM_NODE_ID, axis_tx_tdest);
-		$display("%h", axis_tx_tdata);
-		$display("----------------------------------------------");
-	end
-end
-
 assign axis_rx_tready = rxtready;
 assign axis_tx_tvalid = !output_fifo_empty && axis_tx_tready;
 assign axis_tx_tdata = {64'h0, tx_tuser_op, 9'h0, {(DATAW/IPRECISION-DPES)*IPRECISION{1'b0}}, output_fifo_odata[IPRECISION*DPES-1:0]}; // Send tuser field as either input or reduction vector
